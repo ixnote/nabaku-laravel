@@ -77,6 +77,10 @@
   },
   {
     "method": "GET",
+    "url": "/api/v1/file/signature"
+  },
+  {
+    "method": "GET",
     "url": "/api/v1/wallet/balance/admin"
   },
   {

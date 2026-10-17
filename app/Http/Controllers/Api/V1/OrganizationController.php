@@ -76,12 +76,11 @@ class OrganizationController extends Controller
 
     public function delete(Request $r, string $id)
     {
-        Access::owner($r);
-        Access::owns($r, $id);
         $org = Access::find(Organization::class, $id);
+        abort_if((string) $org->getKey() === (string) $r->user()->getKey(), 409, 'Cannot delete your own administrator account');
         // Retain the financial audit trail and all references.
         $org->update(['blocked' => true, 'isActive' => false, 'deletedAt' => now()]);
 
-        return Api::ok(null,'Organization deleted successfully');
+        return Api::ok(null, 'Organization deleted successfully');
     }
 }

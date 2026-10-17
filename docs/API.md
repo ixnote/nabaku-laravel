@@ -34,7 +34,7 @@ The complete endpoint list is in [ROUTE_INVENTORY.md](../ROUTE_INVENTORY.md). Pa
 | Forgot/resend | `POST authentication/password/forgot` or `resend-activation`: `id` |
 | Reset | `POST authentication/password/reset`: `token`, `password` |
 | Manager activation | `PUT authentication/activate/manager/{token}`: `password` |
-| Profile | `PUT authentication/set-profile`: `profile_step`; optional `organization_details`, `address`, `cac_details`, `bank_details`, `contact_details` |
+| Profile | `PUT authentication/set-profile`: optional `profile_step`, `organization_details` (`name`, `description`, `type`, `profile_image`, `cover_image`), `address`, `cac_details`, `bank_details`, `contact_details`; an empty string clears an image, the description or a contact field |
 | Organization update | `PUT organization/update`: `name`; optional `phone`, `description`, `type` |
 | Own password | `PUT organization/update/password`: `password`; acts on the authenticated account |
 | Admin password | `PUT organization/update/organization-password`: `user` (organization ID), `password` |
@@ -43,6 +43,7 @@ The complete endpoint list is in [ROUTE_INVENTORY.md](../ROUTE_INVENTORY.md). Pa
 | Project update | `PUT project/update/{id}`: `title`, `description`, `target_amount`, `closed`; optional multipart image `file` |
 | Activity create/update | `name`, `start`, `end`, optional `location`, image `file`; dates stay strings in MongoDB |
 | Avatar/file | Multipart `PUT organization/update/avatar` or `file/upload`: `file`, with Bearer token |
+| Upload signature | `GET file/signature`, with Bearer token: returns `signature`, `timestamp`, `folder`, `cloudName`, `apiKey` for a direct browser upload to Cloudinary |
 | Verify bank | `POST bank/verify`: `account_number` (10 digits), `account_bank` (bank code string) |
 | Save bank | `POST bank/create` or `PUT bank/update/{id}`: `bankCode`, `bankName`, `accountName`, `accountNumber`; verified account name comes from provider |
 | Donate | Public `POST donation/make-donation`: `email`, `amount` (min NGN 1,000), `projectId`, `anonymous` boolean; `name`/`phone` required when not anonymous |
@@ -64,9 +65,10 @@ IDs remain 24-character MongoDB ID strings in JSON, ObjectIds in MongoDB. Existi
 - File upload now requires authentication. Profile setup remains possible after registration/activation/login.
 - Public organization responses omit credentials, bank account details, internal admin/blocked flags, and private profile fields. Private details remain available from `authentication/get-profile`.
 - Block/unblock and platform wallet/report endpoints require admin access; manager permissions resolve through their organization. Managers cannot invite managers, change organization bank/profile settings, or initiate withdrawals.
-- Organization deletion archives the account and hides public resources while retaining financial history.
+- Organization deletion is admin-only (an admin cannot delete their own account), and archives the account and hides public resources while retaining financial history.
 - `GET user/delete?userId=...` works for compatibility; use `DELETE user/{id}` in React.
 - Corrected project ownership checks, donation status filters, scoped pagination totals, graph date handling, and project title search.
+- Activation emails link to `FRONTEND_URL` + `/pop?token=...`; reset emails link to `/reset-password?token=...&email=...`, matching the web app's pages.
 - Activation/reset tokens are single-use; new activation tokens expire after 24 hours. Legacy activation links without expiry require an explicit `LEGACY_ACTIVATION_UNTIL` deadline or resend.
 - Inactive login returns 403; use resend activation. Forgot/resend return generic responses to avoid account enumeration.
 - Monetary input allows at most two decimal places. A checkout timeout returns its reference; investigate or reconcile it before asking the donor to retry. Withdrawals can be completed or cancelled once and cannot be reopened.

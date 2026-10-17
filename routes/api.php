@@ -42,7 +42,7 @@ Route::prefix('organization')->group(function () {
         Route::put('update/organization-password', [OrganizationController::class, 'adminPassword'])->middleware('admin');
         Route::post('block/{id}', [OrganizationController::class, 'block'])->middleware('admin');
         Route::put('update', [OrganizationController::class, 'update']);
-        Route::delete('delete/{id}', [OrganizationController::class, 'delete']);
+        Route::delete('delete/{id}', [OrganizationController::class, 'delete'])->middleware('admin');
     });
     Route::get('{id}', [OrganizationController::class, 'show']);
 });
@@ -80,6 +80,7 @@ Route::prefix('bank')->group(function () {
     });
 });
 Route::put('file/upload', [FileController::class, 'upload'])->middleware(['jwt', 'throttle:uploads']);
+Route::get('file/signature', [FileController::class, 'signature'])->middleware(['jwt', 'throttle:uploads']);
 Route::prefix('donation')->group(function () {
     Route::post('make-donation', [DonationController::class, 'create'])->middleware('throttle:donations');
     Route::post('webhook', [DonationController::class, 'webhook']);
@@ -108,5 +109,5 @@ Route::middleware('jwt')->group(function () {
         });
     }
 });
-Route::get('global/admin/dashboard',[ReportController::class, 'admin'])->middleware(['jwt', 'admin']);
-Route::get('global/search',[ReportController::class, 'search']);
+Route::get('global/admin/dashboard', [ReportController::class, 'admin'])->middleware(['jwt', 'admin']);
+Route::get('global/search', [ReportController::class, 'search']);

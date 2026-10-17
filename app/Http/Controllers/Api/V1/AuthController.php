@@ -148,7 +148,7 @@ class AuthController extends Controller
             }
             $token = Str::random(64);
             $user->update(['resetPasswordToken' => hash('sha256', $token), 'resetPasswordExpires' => now()->addMinutes(15)]);
-            $url = rtrim(config('fundraiser.frontend_url'), '/').config('fundraiser.reset_path').rawurlencode($token);
+            $url = NotificationService::frontendLink(config('fundraiser.reset_path'), ['token' => $token, 'email' => $user->email]);
             $this->mail->enqueue($user->email, 'Password Reset Mail', 'Use this link to reset your password. It expires in 15 minutes.', $url);
         });
 
@@ -182,10 +182,13 @@ class AuthController extends Controller
     {
         Access::owner($r);
         $v = $r->validate([
-            'profile_step' => 'required|integer|min:1|max:10',
-            'organization_details' => 'sometimes|array:description,type,profile_image,cover_image',
-            'organization_details.description' => 'sometimes|string|max:20000', 'organization_details.type' => 'sometimes|in:faith-based,non-profit,others',
-            'organization_details.profile_image' => 'sometimes|url|max:2048', 'organization_details.cover_image' => 'sometimes|url|max:2048',
+            // Optional so settings edits don't touch KYB progress
+            'profile_step' => 'sometimes|integer|min:1|max:10',
+            'organization_details' => 'sometimes|array:name,description,type,profile_image,cover_image',
+            'organization_details.name' => 'sometimes|string|min:3|max:200',
+            'organization_details.description' => 'nullable|string|max:20000', 'organization_details.type' => 'sometimes|in:faith-based,non-profit,others',
+            // An empty value clears an image from the settings page
+            'organization_details.profile_image' => 'nullable|url|max:2048', 'organization_details.cover_image' => 'nullable|url|max:2048',
             'address' => 'sometimes|array:street,city,state,zipCode', 'address.street' => 'required_with:address|string|max:300', 'address.city' => 'required_with:address|string|max:100', 'address.state' => 'required_with:address|string|max:100', 'address.zipCode' => 'nullable|regex:/^[0-9]{6}$/',
             'cac_details' => 'sometimes|array:name,registration_certificate,registration_number', 'cac_details.name' => 'required_with:cac_details|string|min:3|max:200', 'cac_details.registration_certificate' => 'required_with:cac_details|url|max:2048', 'cac_details.registration_number' => 'required_with:cac_details|string|max:100',
             'bank_details' => 'sometimes|array:bankCode,bankName,accountNumber,accountName', 'bank_details.bankCode' => 'sometimes|string|max:20', 'bank_details.bankName' => 'required_with:bank_details|string|max:100', 'bank_details.accountNumber' => 'required_with:bank_details|string|regex:/^[0-9]{10}$/', 'bank_details.accountName' => 'required_with:bank_details|string|max:200',
@@ -193,8 +196,10 @@ class AuthController extends Controller
         ]);
         Atomic::run(function () use ($r, $v) {
             $org = Organization::findOrFail(Access::organization($r));
-            $org->fill($v['organization_details'] ?? []);
-            $org->profile_step = $v['profile_step'];
+            $org->fill(array_map(fn ($value) => $value ?? '', $v['organization_details'] ?? []));
+            if (isset($v['profile_step'])) {
+                $org->profile_step = $v['profile_step'];
+            }
             foreach (['address' => [Address::class, 'address'], 'cac_details' => [Cac::class, 'cac'], 'bank_details' => [Bank::class, 'bank'], 'contact_details' => [Contact::class, 'contact']] as $input => [$model,$field]) {
                 if (! isset($v[$input])) {
                     continue;
@@ -212,11 +217,11 @@ class AuthController extends Controller
             $org->save();
         });
 
-        return Api::ok(null,'Organization updated successfully');
+        return Api::ok(null, 'Organization updated successfully');
     }
 
     public function states()
     {
-        return Api::ok(json_decode(file_get_contents(resource_path('data/states.json')),true),'states fetched');
+        return Api::ok(json_decode(file_get_contents(resource_path('data/states.json')), true), 'states fetched');
     }
 }

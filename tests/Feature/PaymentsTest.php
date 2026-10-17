@@ -85,6 +85,6 @@ class PaymentsTest extends MongoTestCase
         app(PaymentService::class)->settle($v);
         app(PaymentService::class)->settle([...$v, 'status' => 'failed']);
         $this->assertSame('successful', $t->fresh()->status);
-        $this->assertSame(1000.0,$this->wallet($org)->balance);
+        $this->assertSame(1000.0, $this->wallet($org)->balance);
     }
 }

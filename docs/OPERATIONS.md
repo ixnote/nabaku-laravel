@@ -41,6 +41,10 @@ docker compose exec app php artisan fundraiser:indexes --apply
 
 The compose stack provides PHP-FPM, Nginx, a scheduler, and an isolated MongoDB replica set. It binds the web port to localhost and does not expose unauthenticated MongoDB to the host. It deliberately uses `nabaku_local`, not production data. It is a development topology; deploy the same PHP image with managed production secrets, authenticated MongoDB, TLS ingress, and proper monitoring.
 
+## Heroku
+
+The `Procfile` runs the API with Heroku's PHP buildpack (`web`, Apache serving `public/`) and the email outbox scheduler (`worker`, `schedule:work`). `composer.json` requires PHP 8.4 and `ext-mongodb`, which the buildpack installs. Set the `.env.example` keys as config vars (`heroku config:set`), use the existing Atlas URI as `MONGODB_URI`, set `CACHE_STORE=mongodb`, and scale the worker with `heroku ps:scale worker=1`, or activation and reset emails are never sent. `public/.user.ini` raises PHP's upload limits to match `docker/php.ini`. Follow the cutover steps below before pointing the web app or Flutterwave webhooks at it.
+
 ## Commands
 
 | Command | Behavior |

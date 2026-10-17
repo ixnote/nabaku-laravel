@@ -25,6 +25,7 @@ All rows below are ported and covered by local route-resolution tests; feature t
 | PUT | `/api/v1/bank/update/:bankId` | Authenticated | `BankCntrl.updateBankDetails` | [x] | [x] |
 | POST | `/api/v1/bank/create` | Authenticated | `BankCntrl.addBankDetails` | [x] | [x] |
 | PUT | `/api/v1/file/upload` | Public | `uploadImage` | [x] | [x] |
+| GET | `/api/v1/file/signature` | Authenticated | `getUploadSignature` (added to Node 2026-10-10) | [x] | [x] |
 | GET | `/api/v1/wallet/balance/admin` | Authenticated | `walletCtrl.getAdminBalance` | [x] | [x] |
 | GET | `/api/v1/wallet/:id` | Authenticated | `walletCtrl.balance` | [x] | [x] |
 | GET | `/api/v1/wallet/` | Authenticated | `walletCtrl.balance` | [x] | [x] |
@@ -38,7 +39,7 @@ All rows below are ported and covered by local route-resolution tests; feature t
 | PUT | `/api/v1/organization/update/organization-password` | Authenticated + admin | `organizationCtrl.changePasswordAdmin` | [x] | [x] |
 | POST | `/api/v1/organization/block/:id` | Authenticated | `organizationCtrl.block` | [x] | [x] |
 | PUT | `/api/v1/organization/update` | Authenticated | `organizationCtrl.updateOrganization` | [x] | [x] |
-| DELETE | `/api/v1/organization/delete/:id` | Authenticated | `organizationCtrl.deleteOrganization` | [x] | [x] |
+| DELETE | `/api/v1/organization/delete/:id` | Admin | `organizationCtrl.deleteOrganization` | [x] | [x] |
 | GET | `/api/v1/organization/:id` | Public | `organizationCtrl.getOrganization` | [x] | [x] |
 | POST | `/api/v1/project/create` | Authenticated | `projectCtrl.createProject` | [x] | [x] |
 | GET | `/api/v1/project/all` | Authenticated | `projectCtrl.getProjects` | [x] | [x] |

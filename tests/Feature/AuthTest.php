@@ -20,7 +20,9 @@ class AuthTest extends MongoTestCase
         $res->assertCreated()->assertJsonPath('data.email', 'new@example.test')->assertJsonPath('data.isAdmin', false)->assertJsonMissingPath('data.password')->assertJsonMissingPath('data.activationToken');
         $org = Organization::where('email', 'new@example.test')->firstOrFail();
         $payload = json_decode(Crypt::decryptString(Outbox::first()->encrypted_payload), true);
-        $token = basename($payload['url']);
+        $this->assertStringStartsWith('http://localhost:3000/pop?token=', $payload['url']);
+        parse_str(parse_url($payload['url'], PHP_URL_QUERY), $query);
+        $token = $query['token'];
         $this->getJson('/api/v1/authentication/activate/'.$token)->assertOk();
         $this->getJson('/api/v1/authentication/activate/'.$token)->assertForbidden();
         $login = $this->postJson('/api/v1/authentication/login', ['id' => $org->email, 'password' => 'password123'])->assertOk()->assertJsonPath('authorization.expiresIn', 2592000);
@@ -64,7 +66,10 @@ class AuthTest extends MongoTestCase
         $org = $this->organization();
         $this->postJson('/api/v1/authentication/password/forgot', ['id' => $org->email])->assertOk();
         $payload = json_decode(Crypt::decryptString(Outbox::first()->encrypted_payload), true);
-        $token = basename($payload['url']);
+        $this->assertStringStartsWith('http://localhost:3000/reset-password?token=', $payload['url']);
+        parse_str(parse_url($payload['url'], PHP_URL_QUERY), $query);
+        $this->assertSame($org->email, $query['email']);
+        $token = $query['token'];
         $this->postJson('/api/v1/authentication/password/reset', ['token' => $token, 'password' => 'newpassword123'])->assertOk();
         $this->postJson('/api/v1/authentication/password/reset', ['token' => $token, 'password' => 'otherpassword123'])->assertForbidden();
         $this->postJson('/api/v1/authentication/login', ['id' => $org->email, 'password' => 'newpassword123'])->assertOk()->assertJsonMissingPath('data.resetPasswordExpires');
@@ -86,5 +91,18 @@ class AuthTest extends MongoTestCase
         $token = str_repeat('a', 64);
         $o->update(['isActive' => false, 'activationToken' => hash('sha256', $token), 'activationExpires' => now()->subMinute()]);
         $this->getJson('/api/v1/authentication/activate/'.$token)->assertForbidden();
+    }
+
+    public function test_settings_edits_keep_kyb_progress_and_can_clear_fields(): void
+    {
+        $org = $this->organization(['profile_step' => 7, 'profile_image' => 'https://images.example.test/logo.jpg']);
+        $headers = $this->token($org);
+        $this->putJson('/api/v1/authentication/set-profile', ['organization_details' => ['name' => 'Renamed Organization', 'description' => '', 'profile_image' => ''], 'contact_details' => ['phone' => '08011112222', 'twitter' => '']], $headers)->assertOk();
+        $org->refresh();
+        $this->assertSame(7, $org->profile_step);
+        $this->assertSame('Renamed Organization', $org->name);
+        $this->assertSame('', $org->profile_image);
+        $this->assertSame('', $org->description);
+        $this->putJson('/api/v1/authentication/set-profile', ['organization_details' => ['name' => 'ab']], $headers)->assertStatus(400);
     }
 }

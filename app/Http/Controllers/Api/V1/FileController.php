@@ -16,4 +16,9 @@ class FileController extends Controller
 
         return Api::ok(['url' => $cloud->upload($r->file('file'), Access::organization($r))['url']], 'url generated');
     }
+
+    public function signature(Request $r, Cloudinary $cloud)
+    {
+        return Api::ok($cloud->uploadSignature(Access::organization($r)), 'upload signature generated');
+    }
 }

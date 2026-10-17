@@ -44,6 +44,6 @@ final class Flutterwave
 
     public function resolve(array $payload): array
     {
-        return $this->call('POST','accounts/resolve',$payload);
+        return $this->call('POST', 'accounts/resolve', $payload);
     }
 }

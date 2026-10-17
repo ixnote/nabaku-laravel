@@ -43,6 +43,6 @@ class UserController extends Controller
         Access::owns($r, $user->organization);
         $user->delete();
 
-        return Api::ok(null,'User deleted successfully.');
+        return Api::ok(null, 'User deleted successfully.');
     }
 }

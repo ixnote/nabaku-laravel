@@ -54,6 +54,9 @@ class EndpointCoverageTest extends MongoTestCase
         $this->putJson('/api/v1/bank/update/bank-details', ['bankCode' => '044', 'bankName' => 'Test', 'accountName' => 'Test', 'accountNumber' => '0123456789'], $h)->assertOk();
         $this->getJson('/api/v1/wallet/balance/admin', $this->token($admin))->assertOk()->assertJsonPath('data.availableBalance', 5000);
         $this->getJson('/api/v1/wallet', $this->token($admin))->assertOk()->assertJsonPath('data.monnifyBalance', 5000);
+        $this->getJson('/api/v1/file/signature')->assertUnauthorized();
+        $signed = $this->getJson('/api/v1/file/signature', $h)->assertOk()->assertJsonPath('data.cloudName', 'test')->assertJsonPath('data.apiKey', 'key')->assertJsonPath('data.folder', 'nabaku/'.$o->getKey())->json('data');
+        $this->assertSame(sha1('folder=nabaku/'.$o->getKey().'&timestamp='.$signed['timestamp'].'secret'), $signed['signature']);
         $this->call('PUT', '/api/v1/file/upload', [], [], ['file' => UploadedFile::fake()->image('test.jpg')], $this->transformHeadersToServerVars($h))->assertOk();
         $this->call('PUT', '/api/v1/organization/update/avatar', [], [], ['file' => UploadedFile::fake()->image('avatar.jpg')], $this->transformHeadersToServerVars($h))->assertOk();
     }

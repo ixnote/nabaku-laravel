@@ -53,6 +53,6 @@ class WithdrawalsTest extends MongoTestCase
         $w = WithdrawalRequest::create(['organization' => $org->getKey(), 'amount' => 1000, 'reference' => 'legacy-pending']);
         app(WithdrawalService::class)->transition((string) $w->getKey(), 'completed');
         $this->assertSame(1000.0, $this->wallet($org)->balance);
-        $this->assertSame(0.0,$this->wallet($org)->reserved_balance);
+        $this->assertSame(0.0, $this->wallet($org)->reserved_balance);
     }
 }

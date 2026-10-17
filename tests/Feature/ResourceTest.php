@@ -76,7 +76,9 @@ class ResourceTest extends MongoTestCase
         $this->getJson('/api/v1/organization/public/'.$org->getKey())->assertOk()->assertJsonMissingPath('data.password')->assertJsonMissingPath('data.bank')->assertJsonMissingPath('data.isAdmin');
         $this->getJson('/api/v1/donation/project/'.$p->getKey(), $headers)->assertOk()->assertJsonCount(1, 'data');
         $this->postJson('/api/v1/organization/block/'.$org->getKey(), [], $headers)->assertForbidden();
-        $this->deleteJson('/api/v1/organization/delete/'.$org->getKey(), [], $headers)->assertOk();
+        $this->deleteJson('/api/v1/organization/delete/'.$org->getKey(), [], $headers)->assertForbidden();
+        $this->deleteJson('/api/v1/organization/delete/'.$admin->getKey(), [], $this->token($admin))->assertStatus(409);
+        $this->deleteJson('/api/v1/organization/delete/'.$org->getKey(), [], $this->token($admin))->assertOk();
         $this->assertNotNull($org->fresh());
         $this->getJson('/api/v1/project/'.$p->getKey())->assertNotFound();
     }

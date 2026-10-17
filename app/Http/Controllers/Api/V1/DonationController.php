@@ -75,8 +75,8 @@ class DonationController extends Controller
     public function show(Request $r, string $donationId)
     {
         $t = Access::find(Transaction::class, $donationId);
-        Access::owns($r,$t->organization);
+        Access::owns($r, $t->organization);
 
-        return Api::ok($t,'Donation fetched successfully');
+        return Api::ok($t, 'Donation fetched successfully');
     }
 }

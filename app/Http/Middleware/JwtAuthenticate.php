@@ -6,7 +6,9 @@ use App\Models\Organization;
 use App\Models\User;
 use App\Services\JwtService;
 use Closure;
+use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
+use Firebase\JWT\SignatureInvalidException;
 use Illuminate\Http\Request;
 
 final class JwtAuthenticate
@@ -16,7 +18,7 @@ final class JwtAuthenticate
         abort_unless($request->bearerToken(), 401, 'Unauthorized access');
         try {
             $claims = app(JwtService::class)->decode($request->bearerToken());
-        } catch (ExpiredException|\Firebase\JWT\SignatureInvalidException|\Firebase\JWT\BeforeValidException|\UnexpectedValueException|\DomainException $e) {
+        } catch (ExpiredException|SignatureInvalidException|BeforeValidException|\UnexpectedValueException|\DomainException $e) {
             abort(401, 'Unauthorized access');
         }
         abort_unless(isset($claims->id,$claims->exp) && is_string($claims->id) && preg_match('/^[a-f0-9]{24}$/i', $claims->id), 401, 'Unauthorized access');
